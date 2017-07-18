@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+ 
+<mapper namespace="com.ys.rent.dao.TenantDao" >
+	<!-- 多表结果集 -->
+	<resultMap id="TenantVo" type="com.ys.rent.vo.TenantVo" />
+	
+	<!-- 通过id查询租户信息,用于禁用租户以后删除该租户对应的水电记录 -->
+	<select id="findTenantByIdForForbid" resultType="com.ys.rent.po.Tenant">
+		select * from 
+	      tb_tenant
+		    where 
+		       id=#{id}
+	</select>
+	
+	<!-- 通过id查询租户信息，用于修改租户信息 -->
+	<select id="selectTenantById" resultMap="TenantVo">
+		select * from 
+	      tb_tenant t 
+			join tb_room r
+	    	 on t.room_id = r.room_id
+	     	  join tb_roomtype rt
+	     	   on r.roomType_id = rt.roomType_id
+	       		join tb_street s
+	         	 on rt.street_id = s.street_id
+		    where 
+		       t.id=#{id}
+	</select>
+	
+	<!-- 根据id查询租户，用于催租功能-->
+	<select id="findTenantById" resultMap="TenantVo">
+		select * from 
+			   tb_tenant t 
+			        join tb_payrecord tp
+			          on t.room_id=tp.room_id
+			           join tb_room r
+				    	 on tp.room_id = r.room_id
+				     	  join tb_roomtype rt
+				     	   on r.roomType_id = rt.roomType_id
+				       		join tb_street s
+				         	 on rt.street_id = s.street_id
+		       where t.id=#{id} 
+		       and DATE_FORMAT(NOW(), '%Y') = tp.year
+			   and DATE_FORMAT(NOW(), '%m') = tp.month 
+	</select>
+	
+	<!-- 租户列表功能 -->
+	    <!-- 根据街道和栋号得到租户列表，并且根据租户名查询租户 -->	
+		<select id="getTenantList" resultMap="TenantVo">
+			select * from 
+			   tb_tenant t
+			    join tb_room r
+			     on t.room_id = r.room_id
+			       join tb_roomtype rt
+			        on r.roomType_id = rt.roomType_id
+			         join tb_street s
+			          on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+					and isForbid=0 and
+			        street_name=#{street_name} and
+			        roomType_name=#{roomType_name}
+			        order by room_name
+			    limit 
+						#{startIndex} , #{pageSize}	
+	     </select>
+	     
+	     <!-- 得到租户分页数量，与上面得到租户列表对应 -->
+	     <select id="getTenantCount" resultType="Integer">
+		 	select count(*) from
+		      tb_tenant t
+		        join tb_room r
+		          on t.room_id = r.room_id
+		            join tb_roomtype rt
+		              on r.roomType_id = rt.roomType_id
+		                join tb_street s
+		                  on rt.street_id = s.street_id
+		      where 1=1
+		      	<if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if>
+				and isForbid=0 and 
+		        street_name=#{street_name} and
+		        roomType_name=#{roomType_name}
+		        order by room_name
+	 	 </select>
+	 	 
+	 	<!-- 根据街道和栋号得到本月到期租户列表，并且根据租户名查询租户 -->	
+		<select id="getExpireTenantList" resultMap="TenantVo">
+			select * from 
+			   tb_tenant t
+			    join tb_room r
+			     on t.room_id = r.room_id
+			       join tb_roomtype rt
+			        on r.roomType_id = rt.roomType_id
+			         join tb_street s
+			          on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+					and isForbid=0  
+					and street_name = #{street_name}
+					and DATE_FORMAT(contract_term_end,'%Y') = DATE_FORMAT(NOW(), '%Y')
+					and DATE_FORMAT(contract_term_end,'%c') = DATE_FORMAT(NOW(), '%c')
+			        order by room_name
+			    limit 
+						#{startIndex} , #{pageSize}	
+	     </select>
+	     
+	     <!-- 得到本月到期租户分页数量，与上面得到租户列表对应 -->
+	     <select id="getExpireTenantCount" resultType="Integer">
+		 	select count(*) from
+		      tb_tenant t
+		        join tb_room r
+		          on t.room_id = r.room_id
+		            join tb_roomtype rt
+		              on r.roomType_id = rt.roomType_id
+		                join tb_street s
+		                  on rt.street_id = s.street_id
+		      where 1=1
+		      	<if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+				</if>
+			    and isForbid=0  
+			    and street_name = #{street_name}
+				and DATE_FORMAT(contract_term_end,'%Y') = DATE_FORMAT(NOW(), '%Y')
+				and DATE_FORMAT(contract_term_end,'%c') = DATE_FORMAT(NOW(), '%c')
+		        order by room_name
+	 	 </select>
+	 	 
+	 	  <!-- 得到本月到期租户分页数量，与上面得到租户列表对应 -->
+	     <select id="getExpireCountBystreet" resultType="Integer">
+		 	select count(*) from
+		      tb_tenant t
+		        join tb_room r
+		          on t.room_id = r.room_id
+		            join tb_roomtype rt
+		              on r.roomType_id = rt.roomType_id
+		                join tb_street s
+		                  on rt.street_id = s.street_id
+			    and isForbid=0  
+			    and street_name = #{street_name}
+				and DATE_FORMAT(contract_term_end,'%Y') = DATE_FORMAT(NOW(), '%Y')
+				and DATE_FORMAT(contract_term_end,'%c') = DATE_FORMAT(NOW(), '%c')
+	 	 </select>
+	 	 
+	 	  <!-- 得到本月到期租户分页数量，与上面得到租户列表对应 -->
+	     <select id="getExpireCount" resultType="Integer">
+		 	select count(*) from
+		      tb_tenant t
+		        join tb_room r
+		          on t.room_id = r.room_id
+		            join tb_roomtype rt
+		              on r.roomType_id = rt.roomType_id
+		                join tb_street s
+		                  on rt.street_id = s.street_id
+			    and isForbid=0  
+				and DATE_FORMAT(contract_term_end,'%Y') = DATE_FORMAT(NOW(), '%Y')
+				and DATE_FORMAT(contract_term_end,'%c') = DATE_FORMAT(NOW(), '%c')
+	 	 </select>
+	
+	<!-- 修改租户和禁用租户-->
+		<!-- 根据id修改租户 -->
+		<update id="editTenantById">
+			update tb_tenant
+	    		set 
+	    		    name=#{name},
+	    			phone=#{phone},
+	    			m_rent=#{m_rent},
+	    			cash_pledge=#{cash_pledge},
+	    			management_cost=#{management_cost},
+	    			sanitation_fee=#{sanitation_fee},
+	    			sewage_fee=#{sewage_fee},
+	    		    rent_day=#{rent_day},
+	    		    remark=#{remark},
+	    			modifyTime=#{modifyTime},
+	    			modifyUser=#{modifyUser}
+   			where id = #{id}
+		</update>
+	
+		<!-- 根据id禁用租户 -->
+		<update id="updateTenantById">
+        	update tb_tenant
+        	 set 
+        	   isForbid = 1,
+        	   reason=#{reason},
+        	   modifyUser=#{modifyUser},
+        	   modifyTime=#{modifyTime}	
+        	   where id=#{id}
+        </update>
+        
+	<!-- 禁用租户列表功能 --> 
+		 <!-- 得到禁用租户列表，并且根据租户名查询禁用的租户 -->	
+		<select id="getForbidTenantList" resultMap="TenantVo">
+			select * from 
+			   tb_tenant t
+			    join tb_room r
+			     on t.room_id = r.room_id
+			       join tb_roomtype rt
+			        on r.roomType_id = rt.roomType_id
+			         join tb_street s
+			          on rt.street_id = s.street_id
+			    where 
+			        1=1
+					<if test="name != null and name != ''">
+						and name like  CONCAT('%', #{name}, '%')  
+					</if>
+				    and isForbid=1
+				    and street_name=#{street_name} 
+				order by 
+					t.modifyTime desc		    
+			    limit 
+					#{startIndex} , #{pageSize}	
+	     </select>
+	     
+	     <!-- 得到禁用租户列表的分页数量，与上面的得到禁用租户列表对应 -->
+	     <select id="getForbidTenantCount" resultType="Integer">
+		 	select count(*) from
+		      tb_tenant t
+		        join tb_room r
+		          on t.room_id = r.room_id
+		            join tb_roomtype rt
+		              on r.roomType_id = rt.roomType_id
+		                join tb_street s
+		                  on rt.street_id = s.street_id
+		         where 1=1
+					 <if test="name != null and name != ''">
+					 and name like  CONCAT('%', #{name}, '%')
+					 </if>  
+		         and isForbid=1
+		         and street_name=#{street_name} 
+	 	 </select>
+        
+		 <!-- 根据id删除禁用租户 -->
+		 <delete id="deleteForbidTenantById">
+		 	 delete from tb_tenant where id=#{id}
+		 </delete>    
+		
+		
+	<!-- 合同期查询列表 -->
+	<select id="selectContract" resultMap="TenantVo">
+		select * from 
+			   tb_tenant t
+			    join tb_room r
+			     on t.room_id = r.room_id
+			       join tb_roomtype rt
+			        on r.roomType_id = rt.roomType_id
+			         join tb_street s
+			          on rt.street_id = s.street_id
+		      where 
+		         DATE_FORMAT(contract_term_end,'%Y') = #{year} and 
+		         DATE_FORMAT(contract_term_end,'%c') = #{month}
+		         and s.street_name=#{street_name}
+		      order by 
+					DATE_FORMAT(contract_term_end,'%d') 		
+		      limit 
+					#{startIndex} , #{pageSize}	   
+	</select>	
+	
+	<!-- 得到查询合同期列表分页数量 -->
+		    <select id="getContractCount" resultType="Integer">
+			    select count(*) from 
+				   tb_tenant t
+				    join tb_room r
+				     on t.room_id = r.room_id
+				       join tb_roomtype rt
+				        on r.roomType_id = rt.roomType_id
+				         join tb_street s
+				          on rt.street_id = s.street_id
+                   where 
+					  DATE_FORMAT(contract_term_end,'%Y') = #{year} and 
+	                  DATE_FORMAT(contract_term_end,'%c') = #{month}
+	                  and s.street_name=#{street_name}
+			</select>
+			
+	<!-- 添加租户 ，用于签约页面-->
+		<insert id="addTenantBySign">
+			insert into 
+				tb_tenant
+				(id,name,phone,room_id,d_rent,m_rent,incidental,contract_term_start,contract_term_end,
+				  cash_pledge,management_cost,sanitation_fee,sewage_fee,total,rent_day,remark,createTime,createUser)
+				values
+				( 
+				  #{id},
+				  #{name},
+				  #{phone},
+				  #{room_id},
+				  #{d_rent},
+				  #{m_rent},
+				  #{incidental},
+				  #{contract_term_start},
+				  #{contract_term_end},
+				  #{cash_pledge},
+				  #{management_cost},
+				  #{sanitation_fee},
+				  #{sewage_fee},
+				  #{total},
+				  #{rent_day},
+				  #{remark},
+				  #{createTime},
+				  #{createUser}
+				) 		
+		</insert>
+		
+		<!--  
+		签约房间以后更新一些起止时间，分别用于待交租列表，待抄水电列表，催租列表 
+		<update id="updateSomeTimeByRoomId">
+			update tb_tenant 
+	 	 	  set 
+	 	 	    time_end = date_sub(NOW(),interval -1 month),
+	 	 	    water_time_end = date_sub(NOW(),interval -1 month),
+	 	 	    call_end = date_sub(NOW(),interval -1 month)
+	 	 	    where room_id=#{room_id}	
+		</update>
+		-->
+		
+		<!--  签约房间以后更新一些起止时间，分别用于待交租列表，待抄水电列表，催租列表--> 
+		<update id="updateSomeTimeByRoomId">
+			update tb_tenant 
+	 	 	  set 
+	 	 	    time_end = #{time_end},
+	 	 	    water_time_end = #{water_time_end},
+	 	 	    call_end = #{call_end}
+	 	 	    where room_id=#{room_id}	
+		</update>
+		
+		
+		
+	<!-- 待交房租列表功能 -->
+	    <!-- 根据街道得到待交房租列表，并且根据租户名查询租户 -->	
+		<select id="getToPayTenantList" resultMap="TenantVo">
+			select t.id,name,phone,rent_day,m_rent,remark,water_time_end,call_end,time_end,
+				   management_cost,sanitation_fee,sewage_fee,
+			       r.room_name,
+			       tew.w_money,tew.e_money,
+			       tp.m_money
+			  from tb_tenant t 
+				join tb_electricity_water tew on t.room_id=tew.room_id 
+					join tb_payrecord tp on tew.room_id=tp.room_id 
+						join tb_room r on tp.room_id = r.room_id 
+							join tb_roomtype rt on r.roomType_id = rt.roomType_id 
+								join tb_street s on rt.street_id = s.street_id 
+			    where 1=1
+			       <if test="name != null and name != ''">
+						and t.name like  CONCAT('%', #{name}, '%')  
+					</if> 
+					and t.isForbid=0
+					and DATE_FORMAT(NOW(), '%Y') = tew.year 
+                    and DATE_FORMAT(NOW(), '%m') = tew.month 
+					and DATE_FORMAT(NOW(), '%Y') = tp.year
+			        and DATE_FORMAT(NOW(), '%m') = tp.month 
+					and DATEDIFF(t.time_end,NOW()) <![CDATA[  < ]]> 4 
+					and DATEDIFF(t.time_end,NOW()) <![CDATA[  > ]]> -1
+			        and s.street_name=#{street_name}
+			    group by t.id
+			    order by room_name
+			    limit 
+						#{startIndex} , #{pageSize}	
+	     </select>
+	     
+	     <!-- 得到待交房租列表分页数量，与上面得到待交租户列表对应 -->
+	     <select id="getToPayTenantCount" resultType="Integer">
+		 	select count(*) 
+		 	  from tb_tenant t 
+				join tb_electricity_water tew on t.room_id=tew.room_id 
+					join tb_payrecord tp on tew.room_id=tp.room_id 
+						join tb_room r on tp.room_id = r.room_id 
+							join tb_roomtype rt on r.roomType_id = rt.roomType_id 
+								join tb_street s on rt.street_id = s.street_id 
+			    where 1=1
+			       <if test="name != null and name != ''">
+						and name like  CONCAT('%', #{name}, '%')  
+					</if> 
+					and t.isForbid=0 
+					and DATE_FORMAT(NOW(), '%Y') = tew.year 
+                    and DATE_FORMAT(NOW(), '%m') = tew.month 
+					and DATE_FORMAT(NOW(), '%Y') = tp.year
+			        and DATE_FORMAT(NOW(), '%m') = tp.month 
+					and DATEDIFF(t.time_end,NOW()) <![CDATA[  < ]]> 4 
+					and DATEDIFF(t.time_end,NOW()) <![CDATA[  > ]]> -1
+			        and s.street_name=#{street_name}
+	 	 </select>
+	 	 
+	 	<!-- 待抄水电列表功能  -->
+	    <!-- 根据街道得到待抄水电列表，并且根据租户名查询租户 -->	
+		<select id="getToCopyEWTenantList" resultMap="TenantVo">
+			select * from 
+			   tb_tenant t
+			    join tb_room r
+			     on t.room_id = r.room_id
+			       join tb_roomtype rt
+			        on r.roomType_id = rt.roomType_id
+			         join tb_street s
+			          on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+					and isForbid=0 
+					and DATEDIFF(water_time_end,NOW()) <![CDATA[  < ]]> 6 
+					and DATEDIFF(water_time_end,NOW()) <![CDATA[  > ]]> 3
+			        and street_name=#{street_name}
+			    order by room_name
+			    limit 
+						#{startIndex} , #{pageSize}	
+	     </select>
+	     
+	     <!-- 得到待抄水电列表分页数量，与上面得到待抄水电列表对应  -->
+	     <select id="getToCopyEWTenantCount" resultType="Integer">
+		 	select count(*) from
+		     tb_tenant t
+			    join tb_room r
+			     on t.room_id = r.room_id
+			       join tb_roomtype rt
+			        on r.roomType_id = rt.roomType_id
+			         join tb_street s
+			          on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+					and isForbid=0 
+					and DATEDIFF(water_time_end,NOW()) <![CDATA[  < ]]> 6
+					and DATEDIFF(water_time_end,NOW()) <![CDATA[  > ]]> 3
+			        and street_name=#{street_name}
+	 	 </select>
+	 	 
+	 	 <!-- 更新起止时间，用于租户交租以后自动变为下个月 -->
+	 	 <update id="updatetimeEnd">
+	 	 	update tb_tenant 
+	 	 	  set time_end = DATE_ADD(time_end,INTERVAL 1 MONTH)
+	 	 	   where id=#{id}
+	 	 </update>
+	 	 
+	 	 <!-- 更新起止时间，用于管理员抄完水电以后自动变为下个月 -->
+	 	 <update id="updatewaterEnd">
+	 	 	update tb_tenant 
+	 	 	  set water_time_end = DATE_ADD(water_time_end,INTERVAL 1 MONTH)
+	 	 	   where room_id=#{room_id}
+	 	 </update>
+	 	 
+	 	 <!-- 更新起止时间，用于管理员催租以后自动变为下个月 -->
+	 	 <update id="updatecallEnd">
+	 	 	update tb_tenant 
+	 	 	  set call_end = DATE_ADD(call_end,INTERVAL 1 MONTH)
+	 	 	   where id=#{id}
+	 	 </update>
+	 	 
+	 	 <!-- 根据房间id查询月基本租金 -->
+	 	 <select id="findmrentByRoomId" resultType="com.ys.rent.po.Tenant">
+	 	 	select id,m_rent,management_cost,sanitation_fee,sewage_fee
+	 	 	  from tb_tenant
+	 	 	   where isForbid=0
+	 	 	   and room_id=#{room_id}
+	 	 </select>
+
+		<!-- 用于测试 -->
+		 <select id="selectAll" resultMap="TenantVo">
+		 	select * from tb_tenant
+		 </select>
+		 
+		 <!-- 用于测试 -->
+		 <update id="updateAll">
+		 	update tb_tenant set 
+		 	    time_end=#{time_end},
+		 	    water_time_end=#{water_time_end},
+		 	    call_end=#{call_end}
+		 	  where id=#{id}
+		 </update>
+		 
+</mapper>

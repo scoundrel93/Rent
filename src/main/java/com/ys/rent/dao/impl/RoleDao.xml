@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ys.rent.dao.RoleDao">
+		
+		<!-- 分页及列表查询 -->
+		<select id="getRoleList" resultType="com.ys.rent.po.Role">
+			select id,roleName,createUser,createTime,modifyUser,
+			    modifyTime
+			 from tb_role
+			 where 1=1
+			 <if test="roleName != null and roleName != ''">
+				and roleName like  CONCAT('%', #{roleName}, '%')  
+			</if>
+			 order by 
+				createTime desc		
+			 limit 
+				#{startIndex} , #{pageSize}	
+		</select>
+		
+		<!-- 得到分页数量 -->
+	    <select id="getRoleCount" resultType="Integer">
+				 select
+					count(*)
+			     from
+					tb_role where 1=1
+				 <if test="roleName != null and roleName != ''">
+				 and roleName like  CONCAT('%', #{roleName}, '%')  
+			</if>	
+		</select>
+		
+		<!-- 用于管理员列表页的角色查询 -->
+		<select id="getList" resultType="com.ys.rent.po.Role">
+			select id,roleName 
+			 from tb_role
+		</select>
+		
+		<!-- 用于权限控制 -->
+		<select id="getroleName" resultType="com.ys.rent.po.Role">
+			select id,roleName 
+			 from tb_role
+			  where id=#{id}
+		</select>
+		
+	<!-- 添加角色 -->
+	<insert id="addRole">
+		insert into 
+			tb_role
+			(id,roleName,createUser,createTime)
+			values
+			(
+				#{id},
+				#{roleName},
+				#{createUser},
+				#{createTime}
+			)
+	</insert>
+	
+	<!-- 修改角色和删除角色 -->
+		<select id="findRoleById" resultType="com.ys.rent.po.Role">
+			select id,roleName
+			  from tb_role
+			    where id=#{id}
+		</select>
+		
+		<update id="editRole">
+			update tb_role
+			   set 
+			      roleName=#{roleName},
+			      modifyUser=#{modifyUser},
+			      modifyTime=#{modifyTime}
+			   where id=#{id}   
+		</update>
+		
+		<!-- 根据id删除单个角色 -->
+		<delete id="deleteRole">
+			delete from tb_role where id=#{id}
+		</delete>
+		
+		<!-- 根据id删除多个角色 -->
+		<delete id="deleteRoles">
+			delete from tb_role where id in
+			     <foreach collection="list" index="index" item="item" open="(" separator="," close=")">   
+		            #{item}   
+		         </foreach>
+		</delete>
+		
+
+</mapper>

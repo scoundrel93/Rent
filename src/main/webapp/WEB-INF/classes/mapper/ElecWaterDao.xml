@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+ 
+<mapper namespace="com.ys.rent.dao.ElecWaterDao" >
+
+    <!-- 管理员添加本月的水电记录 -->
+	<insert id="addElecWater">
+		insert into
+		  tb_electricity_water
+		    (id,year,month,electric,water,room_id,createUser,createTime)
+		  values
+		    (
+		     #{id},
+		     #{year},
+		     #{month},
+		     #{electric},
+		     #{water},
+		     #{room_id},
+		     #{createUser},
+		     #{createTime}
+		    )   
+	</insert>
+	
+	<!-- 管理员签约房间时添加一个水电底 -->
+	<insert id="addElecWaterBySign">
+		insert into
+		  tb_electricity_water
+		    (id,year,month,electric,water,room_id,createUser,createTime)
+		  values
+		    (
+		     #{id},
+		     #{year},
+		     #{month},
+		     #{electric},
+		     #{water},
+		     #{room_id},
+		     #{createUser},
+		     #{createTime}
+		    )   
+	</insert>
+	
+    <!-- 根据房间id查询水电表的相关信息(两条数据)，用于下面计算水费和电费以及更新水费电费到数据库 -->
+    <select id="findEWByRoomId" resultType="com.ys.rent.po.ElecWater">
+		select * 
+		  from tb_electricity_water 
+			where room_id=#{room_id} 
+			and   DATE_FORMAT(NOW(), '%Y') = year 
+			and   (DATE_FORMAT(NOW(), '%m') = month + 1
+			or    DATE_FORMAT(NOW(), '%m') = month)
+    </select>
+    
+	<!-- 根据管理员添加进来的水电更新水费电费 -->
+	<update id="updateEWmoney">
+		update tb_electricity_water 
+			set e_money=#{e_money},
+				w_money=#{w_money}
+			where DATE_FORMAT(NOW(), '%Y') = year
+			and   DATE_FORMAT(NOW(), '%m') = month
+			and   room_id=#{room_id} 
+	</update>
+	
+	<!-- 禁用租户以后删除该租户对应的水电 -->
+	<delete id="deleteEW">
+		delete from tb_electricity_water
+			where room_id=#{room_id}
+	</delete>
+	
+</mapper>

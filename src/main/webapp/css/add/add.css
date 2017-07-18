@@ -1,0 +1,33 @@
+.cssbody {
+ margin-top:50px;
+ margin-right: auto;
+ margin-left: auto;
+ width:600px;
+}
+  textarea {
+	-moz-box-shadow:1px 1px 0 #E7E7E7;
+	-moz-box-sizing:border-box;
+	border-color:#CCCCCC #999999 #999999 #CCCCCC;
+	border-style:solid;
+	border-width:1px;
+	font-family:arial,sans-serif;
+	font-size:13px;
+	height:130px;
+	margin:10px auto;
+	outline-color:-moz-use-text-color;
+	outline-style:none;
+	outline-width:medium;
+	padding:2px;
+	width:100%;
+}
+input{
+	width:300px;
+}
+.cssh1{
+	color:#438eb9;
+	font-size:40px;
+}
+.cssp{
+	margin-right:20px;
+	font-size:20px;
+}

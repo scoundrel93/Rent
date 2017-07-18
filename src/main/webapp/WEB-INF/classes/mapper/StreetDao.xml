@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+ 
+<mapper namespace="com.ys.rent.dao.StreetDao" >
+
+    <!-- 用于相关列表页的街道查询 -->
+	<select id="getStreetList" resultType="com.ys.rent.po.Street">
+		select street_id,street_name
+		 from tb_street
+	</select>
+	
+	<!-- 用于添加房间后的页面跳转 -->
+	<select id="getStreetByStreetId" resultType="com.ys.rent.po.Street">
+		select street_id,street_name
+		 from tb_street
+		  where street_id=#{street_id}
+	</select>
+	
+</mapper>

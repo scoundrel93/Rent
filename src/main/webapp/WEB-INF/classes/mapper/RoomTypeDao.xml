@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+ 
+<mapper namespace="com.ys.rent.dao.RoomTypeDao" >
+
+	<!-- 用于添加房间 -->
+	<select id="getRoomTypeListByStreetId" resultType="com.ys.rent.po.RoomType">
+		select roomType_id,roomType_name,street_id
+		 from tb_roomType
+		  where street_id=#{street_id}
+	</select>
+	
+	<!-- 用于添加房间以后页面的跳转 -->
+	<select id="getRoomTypeByRoomTypeId" resultType="com.ys.rent.po.RoomType">
+		select roomType_id,roomType_name,street_id
+		 from tb_roomType
+		  where roomType_id=#{roomType_id}
+	</select>
+	
+	<!-- 后台测试可用 -->
+	<insert id="addRoomType">
+		insert into
+		  tb_roomtype
+		    (roomType_id,roomType_name,street_id)
+		  values
+		    (
+		     #{roomType_id},
+		     #{roomType_name},
+		     #{street_id}
+		    )   
+	</insert>
+  
+</mapper>

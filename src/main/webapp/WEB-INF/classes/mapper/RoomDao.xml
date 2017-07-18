@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+ 
+<mapper namespace="com.ys.rent.dao.RoomDao" >
+    <!-- 多表结果集 -->
+	<resultMap id="RoomVo" type="com.ys.rent.vo.RoomVo" />
+	
+	<!-- 根据id查询房间，用于房间模块所有页面数据的回显，以及修改功能-->
+	<select id="findRoomById" resultMap="RoomVo">
+		select * from 
+		   tb_room r
+		    join tb_roomType rt
+		     on r.roomType_id = rt.roomType_id
+		       join tb_street s
+		        on rt.street_id = s.street_id
+		    where 
+		       room_id=#{room_id}
+	</select>
+	
+	<!-- 租户列表功能 -->
+	    <!-- 根据街道和栋号得到房间列表，并且根据房间号查询房间 -->	
+		<select id="getRoomList" resultMap="RoomVo">
+			select * from 
+			   tb_room r
+			    join tb_roomType rt
+			      on r.roomType_id = rt.roomType_id
+			       join tb_street s
+			        on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+				   and
+			       street_name=#{street_name} and
+			       roomType_name=#{roomType_name}
+			    order by room_name   
+			    limit 
+						#{startIndex} , #{pageSize}	
+	     </select>
+	     
+	     <!-- 得到房间分页数量，与上面得到房间列表对应 -->
+	     <select id="getRoomCount" resultType="Integer">
+		 	select count(*) from 
+			   tb_room r
+			    join tb_roomType rt
+			      on r.roomType_id = rt.roomType_id
+			       join tb_street s
+			        on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+				   and
+			       street_name=#{street_name} and
+			       roomType_name=#{roomType_name}
+	 	 </select>
+	 	 
+	 	 <!-- 根据街道得到房间状态列表（已租房间和闲置房间），并且根据房间号查询房间 -->	
+		<select id="getRoomStatusList" resultMap="RoomVo">
+			select * from 
+			   tb_room r
+			    join tb_roomType rt
+			      on r.roomType_id = rt.roomType_id
+			       join tb_street s
+			        on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+				   and
+			       street_name=#{street_name} and
+			       isRent=#{isRent}
+			    order by room_name   
+			    limit 
+						#{startIndex} , #{pageSize}	
+	     </select>
+	     
+	     <!-- 得到房间状态分页数量，与上面得到房间状态列表对应 -->
+	     <select id="getRoomStatusCount" resultType="Integer">
+		 	select count(*) from 
+			   tb_room r
+			    join tb_roomType rt
+			      on r.roomType_id = rt.roomType_id
+			       join tb_street s
+			        on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+				   and
+			       street_name=#{street_name} and
+			       isRent=#{isRent}
+	 	 </select> 
+	 	 
+	 	  <!-- 根据街道得到转租房，并且根据房间号查询房间 -->	
+		<select id="getReturnRoomList" resultMap="RoomVo">
+			select * from 
+			   tb_room r
+			   	join tb_tenant t
+			      on t.room_id = r.room_id
+			    join tb_roomType rt
+			      on r.roomType_id = rt.roomType_id
+			       join tb_street s
+			        on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+				   and
+			       street_name=#{street_name} and
+			       isRent=#{isRent} and
+			       DATE_FORMAT(contract_term_start, '%m') = DATE_FORMAT(NOW(), '%m')-3
+			    order by room_name   
+			    limit 
+						#{startIndex} , #{pageSize}	
+	     </select>
+	     
+	     <!-- 得到房间状态分页数量，与上面得到房间状态列表对应 -->
+	     <select id="getReturnRoomCount" resultType="Integer">
+		 	select count(*) from 
+			  tb_room r
+			   	join tb_tenant t
+			      on t.room_id = r.room_id
+			    join tb_roomType rt
+			      on r.roomType_id = rt.roomType_id
+			       join tb_street s
+			        on rt.street_id = s.street_id
+			    where 1=1
+			       <if test="room_name != null and room_name != ''">
+						and room_name like  CONCAT('%', #{room_name}, '%')  
+					</if> 
+				   and
+			       street_name=#{street_name} and
+			       isRent=#{isRent} and
+			       DATE_FORMAT(contract_term_start, '%m') = DATE_FORMAT(NOW(), '%m')-3
+	 	 </select>   
+	
+	<!-- 修改房间信息 -->
+	<update id="editRoomById">
+   		update tb_room
+   		  set 
+   		    price=#{price},
+   		    roomDescription=#{roomDescription},
+   		    modifyUser=#{modifyUser},
+   		    modifyTime=#{modifyTime}
+   		  where room_id=#{room_id}  
+   	</update>	
+    	
+	<!-- 修改房间状态 -->
+	<update id="updateRoomStatus">
+		update tb_room 
+		    set isRent = #{isRent}
+		      where room_id = #{room_id}
+	</update>
+		
+	<!-- 添加房间 -->
+	<insert id="addRoom">
+		insert into 
+			tb_room
+			(room_id,room_name,price,roomDescription,
+			createUser,createTime,modifyUser,modifyTime,roomType_id)
+			values
+			( 
+			  #{room_id},
+			  #{room_name},
+			  #{price},
+			  #{roomDescription},
+			  #{createUser},
+			  #{createTime},
+			  #{modifyUser},
+			  #{modifyTime},
+			  #{roomType_id}
+			) 		
+   	</insert>
+   	
+   	<!-- 统计功能 -->
+   	     <!-- 得到闲置房间数量 -->
+	     <select id="getFreeRoomCount" resultType="Integer">
+		 	select count(*) from 
+			   tb_room
+			    where isRent='0'
+	 	 </select>
+	 	 
+	 	 <select id="getFreeRoomCountByStreetName" resultType="Integer">
+		 	select count(*) from 
+			   tb_room r
+			    join tb_roomType rt
+			      on r.roomType_id = rt.roomType_id
+			       join tb_street s
+			        on rt.street_id = s.street_id
+			    where isRent='0'
+			    and street_name=#{street_name} 
+	 	 </select>
+	 	 
+	 	 <!-- 得到已租房间数量 -->
+	     <select id="getRentRoomCount" resultType="Integer">
+		 	select count(*) from 
+			   tb_room
+			    where isRent='1'
+	 	 </select>
+   	
+</mapper>

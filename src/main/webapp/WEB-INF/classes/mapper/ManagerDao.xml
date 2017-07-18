@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ys.rent.dao.ManagerDao">
+		
+        <!-- 多表结果集 -->
+	    <resultMap id="ManagerVo" type="com.ys.rent.vo.ManagerVo" />
+
+        <!-- 管理员登录 -->
+		<select id="login" resultType="com.ys.rent.po.Manager">
+			select 
+				id,roleId,username,createTime,lastloginTime,loginTimes,isUsed,street_id	
+			from 
+				tb_manager
+			where username = #{username} and password = #{password} and isUsed = 0	 
+		</select>
+		
+		<!-- 更新登录时间和登录次数 -->
+		<update id="updateTime">
+			update tb_manager
+				   set 
+				      lastloginTime=#{lastloginTime},
+				      loginTimes=#{loginTimes}
+				   where id=#{id}   
+		</update>
+		
+		<!-- 根据管理员姓名查询管理员信息，用于管理员登录时最后一次登录时间和登录次数的修改 -->
+		<select id="findManagerByusername" resultType="com.ys.rent.po.Manager">
+			select *
+			  from tb_manager
+			    where username=#{username}
+		</select>
+		
+		<!-- 分页查询 -->
+		<select id="getListByPage" resultMap="ManagerVo">
+			select
+				m.id,r.roleName,m.username,m.createTime,m.modifyTime,m.isUsed
+			from
+				tb_manager as m 				
+				left join 
+					tb_role as r 
+				on r.id = m.roleId				
+				where 1=1
+				<if test="roleId != null and roleId!=''">
+					and roleId = #{roleId}
+				</if>
+				<if test="username != null and username != ''">
+					and username like  CONCAT('%', #{username}, '%')  
+				</if>
+				<if test="createTime1 != null">
+					and m.createTime <![CDATA[  > ]]> #{createTime1}  
+				</if>
+				<if test="createTime2 != null">
+					and m.createTime <![CDATA[  < ]]>  #{createTime2} 
+				</if>
+				<if test="isUsed != null">
+					and m.isUsed = #{isUsed} 
+				</if>								
+			order by 
+				m.createTime desc		
+			limit 
+				#{startIndex} , #{pageSize}			
+		
+		</select>
+		
+		<!-- 检查用户名和密码 -->
+		<select id="checkUsername" resultType="com.ys.rent.po.Manager">
+			select id,roleId,username,password,createTime,modifyTime,isUsed 
+			  from tb_manager where username = #{username} 
+		</select>
+		
+		<!-- 得到分页查询数量 -->
+		<select id="getCount" resultType="Integer">
+			select
+				count(*)
+			from
+				tb_manager where 1=1
+				<if test="roleId != null and roleId!=''">
+					and roleId = #{roleId}
+				</if>
+				<if test="username != null and username!=''">
+					and username like  CONCAT('%', #{username}, '%')
+				</if>
+				<if test="createTime1 != null">
+					and createTime <![CDATA[  > ]]> #{createTime1} 
+				</if>
+				<if test="createTime2 != null">
+					and createTime <![CDATA[  < ]]> #{createTime2}
+				</if>				 
+				<if test="isUsed != null">
+					and isUsed = #{isUsed} 
+				</if>
+		</select>
+		
+		<!-- 添加管理员 -->
+		<insert id="addManager">
+			insert into 
+				tb_manager
+				(id,roleId,username,password,createTime,modifyTime,isUsed,street_id)
+				values
+				(#{id},#{roleId},#{username},#{password},#{createTime},#{modifyTime},#{isUsed},#{street_id}) 		
+		</insert>
+		
+		<!-- 修改管理员和删除管理员 -->
+			<!-- 先根据id查找管理员信息 -->
+			<select id="findManagerById" resultType="com.ys.rent.po.Manager">
+				select id,roleId,username,password,isUsed
+				  from tb_manager
+				    where id=#{id}
+			</select>
+			
+			<!-- 再根据id修改管理员信息 -->
+			<update id="editManager">
+				update tb_manager
+				   set 
+				      roleId=#{roleId},
+				      username=#{username},
+				      modifyTime=#{modifyTime},
+				      isUsed=#{isUsed}
+				   where id=#{id}   
+			</update>
+			
+			<!-- 根据id删除单个管理员 -->
+			<delete id="deleteManager">
+				delete from tb_manager where id=#{id}
+			</delete>
+			
+			<!-- 根据角色id删除管理员 -->
+			<delete id="deleteManagerByroleId">
+				delete from tb_manager where roleId=#{roleId}
+			</delete>
+			
+			<!-- 根据id删除多个管理员 -->
+			<delete id="deleteManagers">
+				delete from tb_manager where id in
+				     <foreach collection="list" index="index" item="item" open="(" separator="," close=")">   
+			            #{item}   
+			         </foreach>
+			</delete>
+		
+
+</mapper>

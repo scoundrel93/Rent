@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ys.rent.dao.UserDao">
+
+		<!-- 分页及列表查询 -->
+		<select id="getUserList" resultType="com.ys.rent.po.User">
+			select *
+			 from tb_user
+			 where 1=1
+			 <if test="name != null and name != ''">
+				and name like  CONCAT('%', #{name}, '%')  
+			</if>
+			 order by 
+				createTime desc		
+			 limit 
+				#{startIndex} , #{pageSize}	
+		</select>
+		
+		<!-- 得到分页数量 -->
+	    <select id="getUserCount" resultType="Integer">
+				 select
+					count(*)
+			     from
+					tb_user where 1=1
+				 <if test="name != null and name != ''">
+				 and name like  CONCAT('%', #{name}, '%')  
+			</if>	
+		</select>
+			
+		<!-- 添加用户 -->
+		<insert id="addUser">
+			insert into 
+				tb_user
+				(id,userType,name,phone,age,sex,remark,createTime)
+				values
+				(
+					#{id},
+					#{userType},
+					#{name},
+					#{phone},
+					#{age},
+					#{sex},
+					#{remark},
+					#{createTime}
+				)
+		</insert>
+		
+		<!-- 修改用户和删除用户 -->
+			<select id="findUserById" resultType="com.ys.rent.po.User">
+				select *
+				  from tb_user
+				    where id=#{id}
+			</select>
+			
+			<update id="editUser">
+				update tb_user
+				   set 
+				      userType=#{userType},
+				      name=#{name},
+				      phone=#{phone},
+				      age=#{age},
+				      sex=#{sex},
+				      remark=#{remark},
+				      modifyTime=#{modifyTime}
+				   where id=#{id}   
+			</update>
+			
+			<delete id="deleteUser">
+				delete from tb_user where id=#{id}
+			</delete>
+			
+</mapper>
